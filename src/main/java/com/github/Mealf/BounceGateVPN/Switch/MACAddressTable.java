@@ -53,7 +53,7 @@ public class MACAddressTable extends TimerTask {
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(packet);
 		byte[] srcMAC = analysis.getFrameSrcMACAddr();
-		if (searchSessionByMAC(srcMAC) == 0) {
+		if (searchSessionByMAC(srcMAC) == 0&&(srcMAC[0]&0x01)==0) {//srcMAC[0]&0x01)==0 檢查是否為群播地址
 			this.table.add(new MACAddressField(srcMAC, hashCode));
 		}
 	}

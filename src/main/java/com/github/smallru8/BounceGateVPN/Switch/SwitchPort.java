@@ -1,31 +1,50 @@
 package com.github.smallru8.BounceGateVPN.Switch;
 
 import org.java_websocket.WebSocket;
+
+import com.github.smallru8.BounceGateVPN.Router.RouterPort;
+import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
 
-public class SwitchPort {
-	public enum DeviceType{
-		WS,TunTap
-	}
+public class SwitchPort extends Port{
 	
-	public DeviceType type;//為WebSocket or TunTap
-	public WebSocket ws;
-	public TapDevice td;
+	public VirtualSwitch vs;
 	
 	public SwitchPort(WebSocket ws) {
-		this.ws = ws;
-		type = DeviceType.WS;
+		super(ws);
 	}
 	public SwitchPort(TapDevice td) {
-		this.td = td;
-		type = DeviceType.TunTap;
+		super(td);
 	}
-	
-	public void send(byte[] data) {
+	public SwitchPort(SwitchPort port) {
+		super(port);
+	}
+	public SwitchPort(RouterPort port) {
+		super(port);
+	}
+
+	@Override
+	/**
+	 * Switch send data to device(for switch call)
+	 */
+	public void sendToDevice(byte[] data) {
 		if(type==DeviceType.WS) {
 			ws.send(data);
-		}else {
+		}else if(type==DeviceType.TunTap){
 			td.write(data);
+		}else if(type==DeviceType.virtualSwitch){
+			sPort.sendToVirtualDevice(data);
+		}else {
+			rPort.sendToVirtualDevice(data);
 		}
 	}
+	
+	/**
+	 * Device send data to this switch
+	 * @param data
+	 */
+	public void sendToVirtualDevice(byte[] data) {
+		vs.sendDataToSwitch(sPort.hashCode(), data);
+	}
+	
 }
