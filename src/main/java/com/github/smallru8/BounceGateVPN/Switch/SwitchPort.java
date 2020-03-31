@@ -43,6 +43,7 @@ public class SwitchPort extends Port{
 	 * Device send data to this switch
 	 * @param data
 	 */
+	@Override
 	public void sendToVirtualDevice(byte[] data) {
 		vs.sendDataToSwitch(sPort.hashCode(), data);
 	}

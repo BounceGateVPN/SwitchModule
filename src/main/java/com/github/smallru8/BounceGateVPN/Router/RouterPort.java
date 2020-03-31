@@ -63,6 +63,7 @@ public class RouterPort extends Port{
 	 * 未實作
 	 * @param data
 	 */
+	@Override
 	public void sendToVirtualDevice(byte[] data) {
 		
 	}

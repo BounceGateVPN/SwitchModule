@@ -46,5 +46,9 @@ public class Port {
 			td.write(data);
 		}
 	}
+	
+	public void sendToVirtualDevice(byte[] data) {
+		
+	}
 
 }
