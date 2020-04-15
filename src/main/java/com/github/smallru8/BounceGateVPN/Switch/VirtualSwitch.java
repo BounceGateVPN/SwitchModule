@@ -12,7 +12,7 @@ import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
 
 /**
- * VirtualSwitch
+ * VirtualSwitch v2
  * 建立方法:
  * 
  * VirtualSwitch sw = new VirtualSwitch();

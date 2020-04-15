@@ -28,13 +28,13 @@ public class SwitchPort extends Port{
 	 * Switch send data to device(for switch call)
 	 */
 	public void sendToDevice(byte[] data) {
-		if(type==DeviceType.WS) {
+		if(type==DeviceType.WS) {//ws
 			ws.send(data);
-		}else if(type==DeviceType.TunTap){
+		}else if(type==DeviceType.TunTap){//tap
 			td.write(data);
-		}else if(type==DeviceType.virtualSwitch){
+		}else if(type==DeviceType.virtualSwitch){//switch
 			sPort.sendToVirtualDevice(data);
-		}else {
+		}else {//router
 			rPort.sendToVirtualDevice(data);
 		}
 	}
