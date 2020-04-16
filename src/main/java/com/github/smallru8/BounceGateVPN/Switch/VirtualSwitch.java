@@ -125,14 +125,15 @@ public class VirtualSwitch extends Thread{
 			for(int k : port.keySet()) {
 				if(k!=tmpHashCode) {//不要送給自己
 					/*
-					 * 這裡會有個加密模組
+					 * 這裡會有個加密模組(如果port的type為WS)
 					 */
 					port.get(k).sendToDevice(data);
 				}
 			}
 		}else {//送給指定port
 			/*
-			 * 這裡會有個加密模組
+			 * 這裡會有個加密模組(如果port的type為WS)
+			 * 
 			 */
 			port.get(devHashCode).sendToDevice(data);
 		}
