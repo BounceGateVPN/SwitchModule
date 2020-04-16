@@ -45,7 +45,15 @@ public class SwitchPort extends Port{
 	 */
 	@Override
 	public void sendToVirtualDevice(byte[] data) {
-		vs.sendDataToSwitch(sPort.hashCode(), data);
+		if(type==DeviceType.WS) {//ws
+			vs.sendDataToSwitch(ws.hashCode(), data);
+		}else if(type==DeviceType.TunTap){//tap
+			vs.sendDataToSwitch(td.hashCode(), data);
+		}else if(type==DeviceType.virtualSwitch){//switch
+			vs.sendDataToSwitch(sPort.hashCode(), data);
+		}else {//router
+			vs.sendDataToSwitch(rPort.hashCode(), data);
+		}
 	}
 	
 }
