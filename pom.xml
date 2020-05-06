@@ -9,6 +9,14 @@
 
   <name>BounceGateVPN.Switch</name>
   <url>http://maven.apache.org</url>
+	
+  <repositories>
+  	<repository>
+  		<id>projectRepository</id>
+  		<name>Project Repository</name>
+  		<url>file://${project.basedir}/Libs</url>
+  	</repository>
+  </repositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,15 +30,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    <groupId>org.greenrobot</groupId>
-    <artifactId>eventbus</artifactId>
-    <version>3.2.0</version>
-</dependency>
-
+      <groupId>org.greenrobot</groupId>
+      <artifactId>eventbus</artifactId>
+      <version>3.2.0</version>
+	</dependency>
     <dependency>
-  <groupId>org.java-websocket</groupId>
-  <artifactId>Java-WebSocket</artifactId>
-  <version>1.4.0</version>
-</dependency>
+      <groupId>org.java-websocket</groupId>
+  	  <artifactId>Java-WebSocket</artifactId>
+  	  <version>1.4.0</version>
+	</dependency>
+	
+	<dependency>
+	  <groupId>smallru8</groupId>
+	  <artifactId>TunTap4J</artifactId>
+	  <version>2.1</version>
+	</dependency>
+	
   </dependencies>
 </project>

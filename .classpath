@@ -23,6 +23,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="A:/smallru8/TUN.TAP/BIN/tuntap4J/TunTap4J.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
