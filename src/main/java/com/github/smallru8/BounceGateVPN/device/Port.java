@@ -39,6 +39,10 @@ public class Port {
 		type = DeviceType.virtualRouter;
 	}
 	
+	/**
+	 * Switch/Router to device
+	 * @param data
+	 */
 	public void sendToDevice(byte[] data) {
 		if(type==DeviceType.WS) {
 			ws.send(data);
@@ -47,6 +51,10 @@ public class Port {
 		}
 	}
 	
+	/**
+	 * Device to switch/router
+	 * @param data
+	 */
 	public void sendToVirtualDevice(byte[] data) {
 		
 	}
