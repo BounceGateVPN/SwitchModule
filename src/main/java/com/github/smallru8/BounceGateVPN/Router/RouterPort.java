@@ -6,6 +6,7 @@ import org.java_websocket.WebSocket;
 
 import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
 import com.github.smallru8.BounceGateVPN.device.Port;
+import com.github.smallru8.BounceGateVPN.device.Port.DeviceType;
 import com.github.smallru8.driver.tuntap.TapDevice;
 
 public class RouterPort extends Port{
@@ -65,7 +66,15 @@ public class RouterPort extends Port{
 	 */
 	@Override
 	public void sendToVirtualDevice(byte[] data) {
-		
+		if(type==DeviceType.WS) {//ws
+			vr.sendDataToRouter(ws.hashCode(), data);
+		}else if(type==DeviceType.TunTap){//tap
+			vr.sendDataToRouter(td.hashCode(), data);
+		}else if(type==DeviceType.virtualSwitch){//switch
+			vr.sendDataToRouter(sPort.hashCode(), data);
+		}else {//router
+			vr.sendDataToRouter(rPort.hashCode(), data);
+		}
 	}
 
 }
