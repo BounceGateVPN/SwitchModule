@@ -12,9 +12,9 @@
 	
   <repositories>
   	<repository>
-  		<id>projectRepository</id>
-  		<name>Project Repository</name>
-  		<url>file://${project.basedir}/Libs</url>
+  		<id>BounceGateVPN</id>
+  		<name>BounceGateVPN</name>
+  		<url>https://raw.github.com/BounceGateVPN/mvn-repo/master</url>
   	</repository>
   </repositories>
 
@@ -41,7 +41,7 @@
 	</dependency>
 	
 	<dependency>
-	  <groupId>smallru8</groupId>
+	  <groupId>com.github.smallru8</groupId>
 	  <artifactId>TunTap4J</artifactId>
 	  <version>2.1</version>
 	</dependency>
