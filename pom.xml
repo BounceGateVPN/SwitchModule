@@ -9,6 +9,14 @@
 
   <name>BounceGateVPN.Switch</name>
   <url>http://maven.apache.org</url>
+	
+  <repositories>
+  	<repository>
+  		<id>BounceGateVPN</id>
+  		<name>BounceGateVPN</name>
+  		<url>https://raw.github.com/BounceGateVPN/mvn-repo/master</url>
+  	</repository>
+  </repositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -28,9 +36,16 @@
 </dependency>
 
     <dependency>
-  <groupId>org.java-websocket</groupId>
-  <artifactId>Java-WebSocket</artifactId>
-  <version>1.5.0</version>
-</dependency>
+      <groupId>org.java-websocket</groupId>
+  	  <artifactId>Java-WebSocket</artifactId>
+  	  <version>1.5.0</version>
+	</dependency>
+	
+	<dependency>
+	  <groupId>com.github.smallru8</groupId>
+	  <artifactId>TunTap4J</artifactId>
+	  <version>2.2</version>
+	</dependency>
+	
   </dependencies>
 </project>
