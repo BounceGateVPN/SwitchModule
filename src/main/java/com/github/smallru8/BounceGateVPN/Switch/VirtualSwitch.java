@@ -6,11 +6,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.java_websocket.WebSocket;
+
 import com.github.Mealf.BounceGateVPN.Switch.MACAddressTable;
+import com.github.smallru8.BounceGateVPN.Router.RouterPort;
+import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
 
 /**
- * VirtualSwitch
+ * VirtualSwitch v2
  * 建立方法:
  * 
  * VirtualSwitch sw = new VirtualSwitch();
@@ -49,18 +52,46 @@ public class VirtualSwitch extends Thread{
 	 * 連接WS設備到此Switch
 	 * @param ws
 	 */
-	public void addDevice(WebSocket ws) {
+	public Port addDevice(WebSocket ws) {
 		SwitchPort sp = new SwitchPort(ws);
+		sp.vs = this;
 		port.put(ws.hashCode(), sp);
+		return sp;
 	}
 	
 	/**
 	 * 連接TD設備到此Switch
 	 * @param td
 	 */
-	public void addDevice(TapDevice td) {
+	public Port addDevice(TapDevice td) {
 		SwitchPort sp = new SwitchPort(td);
+		sp.vs = this;
 		port.put(td.hashCode(), sp);
+		return sp;
+	}
+	
+	/**
+	 * 連接Switch設備到此Switch
+	 * @param sPort
+	 * @return
+	 */
+	public Port addDevice(SwitchPort sPort) {
+		SwitchPort sp = new SwitchPort(sPort);
+		sp.vs = this;
+		port.put(sPort.hashCode(), sp);
+		return sp;
+	}
+	
+	/**
+	 * 連接Router設備到此Switch
+	 * @param rPort
+	 * @return
+	 */
+	public Port addDevice(RouterPort rPort) {
+		SwitchPort sp = new SwitchPort(rPort);
+		sp.vs = this;
+		port.put(rPort.hashCode(), sp);
+		return sp;
 	}
 	
 	/**
@@ -95,16 +126,17 @@ public class VirtualSwitch extends Thread{
 			for(int k : port.keySet()) {
 				if(k!=tmpHashCode) {//不要送給自己
 					/*
-					 * 這裡會有個加密模組
+					 * 這裡會有個加密模組(如果port的type為WS)
 					 */
-					port.get(k).send(data);
+					port.get(k).sendToDevice(data);
 				}
 			}
 		}else {//送給指定port
 			/*
-			 * 這裡會有個加密模組
+			 * 這裡會有個加密模組(如果port的type為WS)
+			 * 
 			 */
-			port.get(devHashCode).send(data);
+			port.get(devHashCode).sendToDevice(data);
 		}
 	}
 	
