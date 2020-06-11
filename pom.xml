@@ -39,7 +39,11 @@
   	  <artifactId>Java-WebSocket</artifactId>
   	  <version>1.5.0</version>
 	</dependency>
-	
+	<dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <version>1.65</version>
+	</dependency>
 	<dependency>
 	  <groupId>com.github.smallru8</groupId>
 	  <artifactId>TunTap4J</artifactId>
