@@ -45,16 +45,34 @@ public class RoutingTable {
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(packet);
 		int desIP = analysis.getDesIPaddress();
+		return searchDesPortHashCode(desIP);
+	}
+
+	public int searchDesPortHashCode(int desIP) {
 		int shl = 0;
-		for(int i=0;i<table.size();i++) {
+		for (int i = 0; i < table.size(); i++) {
 			RoutingField field = table.get(i);
 			shl = 32 - field.netmask;
-			if(field.networkDes>>shl == desIP>>shl)
+			if (field.networkDes >> shl == desIP >> shl)
 				return field.sessionHashCode;
 		}
 		return 0;
 	}
-	
+
+	public int searchSrcPortHashCode(byte[] packet) {
+		Analysis analysis = new Analysis();
+		analysis.setFramePacket(packet);
+		int desIP = analysis.getSrcIPaddress();
+		int shl = 0;
+		for (int i = 0; i < table.size(); i++) {
+			RoutingField field = table.get(i);
+			shl = 32 - field.netmask;
+			if (field.networkDes >> shl == desIP >> shl)
+				return field.sessionHashCode;
+		}
+		return 0;
+	}
+
 	boolean remove(int hashCode) {
 		Iterator<RoutingField> it = table.iterator();
 		while (it.hasNext()) {
