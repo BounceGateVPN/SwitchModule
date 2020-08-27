@@ -168,7 +168,7 @@ public class VirtualRouter extends Thread {
 		System.out.println("devHashCode:" + devHashCode);
 		if (devHashCode == 0) {
 			multicast.setPacket(data);
-			if (multicast.getType() == MulticastType.MULTICAST && multicast.isSpecialAddress()) {
+			if (multicast.getType() == MulticastType.MULTICAST && !multicast.isSpecialAddress()) {
 				System.out.println("send data is multicast");
 				ArrayList<byte[]> IPList = multicast.getIPinGroup();
 				if (IPList == null) {
