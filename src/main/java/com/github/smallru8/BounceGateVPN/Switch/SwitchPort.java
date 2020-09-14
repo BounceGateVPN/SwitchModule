@@ -3,24 +3,33 @@ package com.github.smallru8.BounceGateVPN.Switch;
 import org.java_websocket.WebSocket;
 
 import com.github.smallru8.BounceGateVPN.Router.RouterPort;
-import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
+import com.github.smallru8.util.abstracts.Port;
 
 public class SwitchPort extends Port{
 	
 	public VirtualSwitch vs;
 	
-	public SwitchPort(WebSocket ws) {
-		super(ws);
-	}
+	public WebSocket ws;
+	public TapDevice td;
+	public SwitchPort sPort;
+	public RouterPort rPort;
+	
 	public SwitchPort(TapDevice td) {
-		super(td);
+		this.td = td;
+		type = DeviceType.TunTap;
 	}
-	public SwitchPort(SwitchPort port) {
-		super(port);
+	public SwitchPort(WebSocket ws) {
+		this.ws = ws;
+		type = DeviceType.WS;
 	}
-	public SwitchPort(RouterPort port) {
-		super(port);
+	public SwitchPort(SwitchPort sPort) {
+		this.sPort = sPort;
+		type = DeviceType.virtualSwitch;
+	}
+	public SwitchPort(RouterPort rPort) {
+		this.rPort = rPort;
+		type = DeviceType.virtualRouter;
 	}
 
 	@Override

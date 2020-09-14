@@ -9,8 +9,8 @@ import org.java_websocket.WebSocket;
 
 import com.github.Mealf.BounceGateVPN.Switch.MACAddressTable;
 import com.github.smallru8.BounceGateVPN.Router.RouterPort;
-import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
+import com.github.smallru8.util.abstracts.Port;
 
 /**
  * VirtualSwitch v2
@@ -120,22 +120,15 @@ public class VirtualSwitch extends Thread{
 	 * @param devHashCode
 	 * @param data
 	 */
-	private void sendDataToDevice(int devHashCode,byte[] data) {//由Switch呼叫，之後要在送出前加密，現在先直接送
+	private void sendDataToDevice(int devHashCode,byte[] data) {//由Switch呼叫
 		if(devHashCode == 0) {//廣播
 			int tmpHashCode = switchTable.searchSrcPortHashCode(data);
 			for(int k : port.keySet()) {
 				if(k!=tmpHashCode) {//不要送給自己
-					/*
-					 * 這裡會有個加密模組(如果port的type為WS)
-					 */
 					port.get(k).sendToDevice(data);
 				}
 			}
 		}else {//送給指定port
-			/*
-			 * 這裡會有個加密模組(如果port的type為WS)
-			 * 
-			 */
 			port.get(devHashCode).sendToDevice(data);
 		}
 	}
