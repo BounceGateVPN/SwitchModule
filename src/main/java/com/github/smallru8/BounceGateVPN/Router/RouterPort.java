@@ -5,29 +5,37 @@ import java.util.UUID;
 import org.java_websocket.WebSocket;
 
 import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
-import com.github.smallru8.BounceGateVPN.device.Port;
-import com.github.smallru8.BounceGateVPN.device.Port.DeviceType;
 import com.github.smallru8.driver.tuntap.TapDevice;
+import com.github.smallru8.util.abstracts.Port;
 
 public class RouterPort extends Port{
 
 	public byte[] MACAddr;
 	public VirtualRouter vr;
 	
+	public WebSocket ws;
+	public TapDevice td;
+	public SwitchPort sPort;
+	public RouterPort rPort;
+	
 	public RouterPort(WebSocket ws) {
-		super(ws);
+		this.ws = ws;
+		type = DeviceType.WS;
 		setMAC();
 	}
 	public RouterPort(TapDevice td) {
-		super(td);
+		this.td = td;
+		type = DeviceType.TunTap;
 		setMAC();
 	}
-	public RouterPort(SwitchPort port) {
-		super(port);
+	public RouterPort(SwitchPort sPort) {
+		this.sPort = sPort;
+		type = DeviceType.virtualSwitch;
 		setMAC();
 	}
-	public RouterPort(RouterPort port) {
-		super(port);
+	public RouterPort(RouterPort rPort) {
+		this.rPort = rPort;
+		type = DeviceType.virtualRouter;
 		setMAC();
 	}
 	
