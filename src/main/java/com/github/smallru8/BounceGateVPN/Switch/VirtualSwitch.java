@@ -9,8 +9,8 @@ import org.java_websocket.WebSocket;
 
 import com.github.Mealf.BounceGateVPN.Switch.MACAddressTable;
 import com.github.smallru8.BounceGateVPN.Router.RouterPort;
-import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
+import com.github.smallru8.util.abstracts.Port;
 
 /**
  * VirtualSwitch v2

@@ -9,8 +9,8 @@ import org.java_websocket.WebSocket;
 
 import com.github.Mealf.BounceGateVPN.Router.RoutingTable;
 import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
-import com.github.smallru8.BounceGateVPN.device.Port;
 import com.github.smallru8.driver.tuntap.TapDevice;
+import com.github.smallru8.util.abstracts.Port;
 
 public class VirtualRouter extends Thread{
 	public static byte[] MACAddr_Upper = new byte[] {0x5E,0x06,0x10};
