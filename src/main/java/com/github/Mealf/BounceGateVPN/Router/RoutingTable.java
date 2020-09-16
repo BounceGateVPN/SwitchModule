@@ -9,8 +9,8 @@ import com.github.smallru8.driver.tuntap.Analysis;
 public class RoutingTable {
 	class RoutingField {
 		public int networkDes;
-		public int netmask;
-		public int gateway;
+		public int netmask;	//mask range 0~32
+		public int gateway;	//only use in search gateway
 		public int sessionHashCode;
 		public int metric;
 
@@ -69,6 +69,20 @@ public class RoutingTable {
 			shl = 32 - field.netmask;
 			if (field.networkDes >> shl == desIP >> shl)
 				return field.sessionHashCode;
+		}
+		return 0;
+	}
+	
+	public int searchGateway(byte[] packet) {
+		Analysis analysis = new Analysis();
+		analysis.setFramePacket(packet);
+		int desIP = analysis.getSrcIPaddress();
+		int shl = 0;
+		for (int i = 0; i < table.size(); i++) {
+			RoutingField field = table.get(i);
+			shl = 32 - field.netmask;
+			if (field.networkDes >> shl == desIP >> shl)
+				return field.gateway;
 		}
 		return 0;
 	}

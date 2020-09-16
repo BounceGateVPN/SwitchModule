@@ -7,6 +7,9 @@ import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.github.Mealf.util.ConvertIP;
+import com.github.smallru8.driver.tuntap.Analysis;
+
 public class ARP extends TimerTask {
 	private static Timer timer;
 	private ArrayList<ARPTable> table;
@@ -100,6 +103,16 @@ public class ARP extends TimerTask {
 			}
 		}
 		return null;// table沒有紀錄
+	}
+	
+	/**
+	 * 搜尋ARP table中該IP address對應的MAC address
+	 * 
+	 * @param IPAddr
+	 * @return
+	 */
+	public byte[] searchMACbyIP(int IPAddr) {
+		return searchMACbyIP(ConvertIP.toByteArray(IPAddr));
 	}
 
 	/**
@@ -237,6 +250,12 @@ public class ARP extends TimerTask {
 			packet[i] = 0x00;
 
 		return packet;
+	}
+	
+	public boolean isARP(byte[] data) {
+		Analysis analysis = new Analysis();
+		analysis.setFramePacket(data);
+		return (analysis.packetType() == 0x06);
 	}
 
 	/**
