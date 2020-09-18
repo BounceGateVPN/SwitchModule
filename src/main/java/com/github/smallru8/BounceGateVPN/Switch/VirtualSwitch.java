@@ -24,10 +24,10 @@ import com.github.smallru8.util.abstracts.Port;
  */
 public class VirtualSwitch extends Thread{
 	
-	private boolean powerFlag;
-	private MACAddressTable switchTable;
+	protected boolean powerFlag;
+	protected MACAddressTable switchTable;
 	public Map<Integer,SwitchPort> port;//紀錄連接上此Switch的設備，用hashCode()識別
-	private BlockingQueue<byte[]> outputQ;//要輸出的data queue
+	protected BlockingQueue<byte[]> outputQ;//要輸出的data queue
 	
 	/**
 	 * 建立一台Switch
