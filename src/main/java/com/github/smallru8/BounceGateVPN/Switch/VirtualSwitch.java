@@ -120,7 +120,7 @@ public class VirtualSwitch extends Thread{
 	 * @param devHashCode
 	 * @param data
 	 */
-	private void sendDataToDevice(int devHashCode,byte[] data) {//由Switch呼叫，之後要在送出前加密，現在先直接送
+	protected void sendDataToDevice(int devHashCode,byte[] data) {//由Switch呼叫，之後要在送出前加密，現在先直接送
 		if(devHashCode == 0) {//廣播
 			int tmpHashCode = switchTable.searchSrcPortHashCode(data);
 			for(int k : port.keySet()) {
