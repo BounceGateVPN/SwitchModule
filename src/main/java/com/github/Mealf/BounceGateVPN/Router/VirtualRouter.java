@@ -1,10 +1,11 @@
-package com.github.smallru8.BounceGateVPN.Router;
+package com.github.Mealf.BounceGateVPN.Router;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -17,19 +18,17 @@ import org.java_websocket.WebSocket;
 
 import com.github.Mealf.BounceGateVPN.Multicast.Multicast;
 import com.github.Mealf.BounceGateVPN.Multicast.MulticastType;
-import com.github.Mealf.BounceGateVPN.Router.ARP;
-import com.github.Mealf.BounceGateVPN.Router.RouterInterface;
-import com.github.Mealf.BounceGateVPN.Router.RoutingTable;
 import com.github.Mealf.util.ConvertIP;
-import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
+import com.github.smallru8.BounceGateVPN.Router.RouterPort;
 import com.github.smallru8.Secure2.config.Config;
 import com.github.smallru8.driver.tuntap.Analysis;
-import com.github.smallru8.driver.tuntap.TapDevice;
 import com.github.smallru8.util.abstracts.Port;
 import com.github.smallru8.util.log.EventSender;
 
 public class VirtualRouter extends Thread {
 	public static byte[] MACAddr_Upper = new byte[] { 0x5E, 0x06, 0x10 };
+	final private static int switch_hashcode = 0;
+	final private static int interface_hashcode = 1;
 
 	private boolean powerFlag;
 	private RoutingTable routingTable;
@@ -39,29 +38,29 @@ public class VirtualRouter extends Thread {
 
 	private Multicast multicast;
 	private Timer timer;
-	ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+	ExecutorService fixedThreadPool = Executors.newCachedThreadPool();
 	private String routerIP = "";
-	private int mask;
+	private int netmask;
 	private byte[] MACAddr;
-	private int interfaceHashcode;
-
 	final private int QUERY_INTERVAL = 6 * 1000;
 	final private int QUERY_START_AFTER = 5 * 1000;
 
 	/**
 	 * 建立Router
 	 */
-	public VirtualRouter() {
+	public VirtualRouter(Config cfg) {
 		powerFlag = true;
 		outputQ = new LinkedBlockingQueue<byte[]>();
 		routingTable = new RoutingTable();
 		port = new HashMap<>();
-
+		
+		routerIP = cfg.ip;
+		setMask(cfg.netmask);
+		setRoutingTable(cfg.routingTable);
+		
 		multicast = new Multicast();
 		arp = new ARP();
 		setMAC();
-		multicast.setRouterMAC(MACAddr);
-		arp.setMAC(MACAddr);
 		setMask(24);
 
 		// Send IGMP query regularly
@@ -79,16 +78,6 @@ public class VirtualRouter extends Thread {
 
 	}
 
-	/**
-	 * Constructor router with have IP
-	 */
-	public VirtualRouter(String routerIP) {
-		this();
-		this.routerIP = routerIP;
-		multicast.setRouterIP(routerIP);
-		arp.setIP(ConvertIP.toByteArray(routerIP));
-	}
-
 	private void setMAC() {
 		MACAddr = new byte[6];
 		for (int i = 0; i < 3; i++)
@@ -97,19 +86,51 @@ public class VirtualRouter extends Thread {
 		MACAddr[3] = (byte) MACAddr_Lower.getLeastSignificantBits();
 		MACAddr[4] = (byte) (MACAddr_Lower.getLeastSignificantBits() >> 8);
 		MACAddr[5] = (byte) MACAddr_Lower.getMostSignificantBits();
+		
+		multicast.setRouterMAC(MACAddr);
+		arp.setMAC(MACAddr);
 	}
 
 	public void setMask(int slashNumber) {
-		mask = 0;
+		netmask = 0;
 		for (int i = 0; i < 32; i++) {
-			mask = mask << 1;
+			netmask = netmask << 1;
 			if (i < slashNumber)
-				mask = mask | 1;
+				netmask = netmask | 1;
 		}
+	}
+	private void setRoutingTable(String routingTable) {
+		String[] routingFields = routingTable.split(";");
+		for(String routingField:routingFields) {
+			String[] args = routingField.split(",");
+			int mask = 0,tmpMask = ConvertIP.toInteger(args[1]);
+			for(int i=32;i>=0;i--) {
+				if((tmpMask & 1) == 1) {
+					mask =  i;
+					break;
+				}
+				tmpMask = tmpMask >> 1;
+			}
+			int des = ConvertIP.toInteger(args[0]);
+			int gateway = ConvertIP.toInteger(args[2]);
+			int hashcode;
+			if(args[3] == "switch")
+				hashcode = switch_hashcode;
+			else
+				hashcode = interface_hashcode;
+			//hashcode may not same
+			this.routingTable.addRoutingTable(des, mask, gateway, hashcode);
+		}
+	}
+	
+	public void setMask(String ip_format) {
+		netmask = ConvertIP.toInteger(ip_format);
 	}
 	
 	public void setIP(String IP) {
 		this.routerIP = IP;
+		multicast.setRouterIP(routerIP);
+		arp.setIP(ConvertIP.toByteArray(routerIP));
 	}
 	
 	public String getIP() {
@@ -117,7 +138,7 @@ public class VirtualRouter extends Thread {
 	}
 	
 	public int getMask() {
-		int tmpMask = this.mask;
+		int tmpMask = this.netmask;
 		for(int i=32;i>=0;i--) {
 			if((tmpMask & 1) == 1) {
 				return i;
@@ -145,57 +166,18 @@ public class VirtualRouter extends Thread {
 	 * 
 	 * @param ws
 	 */
-	public Port addDevice(WebSocket ws) {
-		RouterPort sp = new RouterPort(ws);
+	public Port addSwitch(WebSocket bi) {
+		RouterPort sp = new RouterPort(bi);
 		sp.vr = this;
-		port.put(ws.hashCode(), sp);
+		port.put(switch_hashcode, sp);
 		return sp;
 	}
 
-	/**
-	 * 連接TD設備到此Router
-	 * 
-	 * @param td
-	 */
-	public Port addDevice(TapDevice td) {
-		RouterPort sp = new RouterPort(td);
-		sp.vr = this;
-		port.put(td.hashCode(), sp);
-		return sp;
-	}
-
-	/**
-	 * 連接Switch設備到此Router
-	 * 
-	 * @param sPort
-	 * @return
-	 */
-	public Port addDevice(SwitchPort sPort) {
-		RouterPort sp = new RouterPort(sPort);
-		sp.vr = this;
-		port.put(sPort.hashCode(), sp);
-		return sp;
-	}
-
-	/**
-	 * 連接Router設備到此Router
-	 * 
-	 * @param rPort
-	 * @return
-	 */
-	public Port addDevice(RouterPort rPort) {
-		RouterPort sp = new RouterPort(rPort);
-		sp.vr = this;
-		port.put(rPort.hashCode(), sp);
-		return sp;
-	}
-
-	public void addInterface() throws URISyntaxException {
-		Config user = new Config();
-		user.setConf("test", Config.ConfType.CLIENT);
+	public void addRouterInterface(Config user) throws URISyntaxException {
 		RouterInterface routerInterface = new RouterInterface(user);
-		RouterPort rPort = (RouterPort) addDevice(routerInterface);
-		interfaceHashcode = rPort.hashCode();
+		RouterPort rPort = new RouterPort(routerInterface);
+		rPort.vr = this;
+		port.put(interface_hashcode, rPort);
 		routerInterface.rPort = rPort;
 		routerInterface.connect();
 	}
@@ -244,7 +226,7 @@ public class VirtualRouter extends Thread {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} else if (devHashCode == 0) {
+		} else if (devHashCode == 0 && !isInLocalNetwork(analysis.getDesIPaddress())) {
 			multicast.setPacket(data);
 
 			// fill srcMAC
@@ -258,31 +240,36 @@ public class VirtualRouter extends Thread {
 					EventSender.sendLog("No member in group.\n");
 					return;
 				}
+				
+				Set<Integer> ports = new HashSet<>();
 				for (byte[] ip : IPList) {
 					EventSender.sendLog("send to:" + ConvertIP.toString(ip));
 					int IPNum = ConvertIP.toInteger(ip), hashcode;
 					hashcode = routingTable.searchDesPortHashCode(IPNum);
-					// 保險處理
+					ports.add(hashcode);
+				}
+				for(int hashcode: ports) {
 					RouterPort dst_port = port.get(hashcode);
 					if (tmpHashCode != hashcode && dst_port != null)
 						dst_port.sendToDevice(data);
 				}
 
 			} else {
-				broadcast(data);
+				//broadcast(data);
 			}
 		} else {
-			/*
-			 * can replace with port.get(devHashCode).type == routerInterface (if hava this
-			 * type)
-			 */
-			if (devHashCode == interfaceHashcode) {
-				port.get(devHashCode).sendToDevice(data);
+			if (devHashCode == interface_hashcode) {
+				RouterPort dst_port = port.get(devHashCode);
+				if (dst_port != null)	
+					dst_port.sendToDevice(data);
+				
 			} else {
+				if(port.get(switch_hashcode)==null)	//not yet added switch
+					return;
+				
 				try {
 					data = arpHandler(data);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					data = null;
 					e.printStackTrace();
 				}
@@ -305,10 +292,9 @@ public class VirtualRouter extends Thread {
 	}
 
 	private void sendToSwitch(byte[] data) {
-		for (Entry<Integer, RouterPort> e : port.entrySet()) {
-			if (e.getValue().type == Port.DeviceType.virtualSwitch)
-				e.getValue().sendToDevice(data);
-		}
+		RouterPort desPort = port.get(switch_hashcode);
+		if(desPort != null)
+			desPort.sendToDevice(data);
 	}
 
 	private byte[] arpHandler(byte[] data) throws InterruptedException {
@@ -358,7 +344,7 @@ public class VirtualRouter extends Thread {
 	}
 	
 	private boolean isInLocalNetwork(int searchIP) {
-		return ((searchIP&mask) == (ConvertIP.toInteger(routerIP)&mask));
+		return ((searchIP&netmask) == (ConvertIP.toInteger(routerIP)&netmask));
 	}
 
 	@Override

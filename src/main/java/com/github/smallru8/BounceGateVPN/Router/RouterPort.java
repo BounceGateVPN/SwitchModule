@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.java_websocket.WebSocket;
 
 import com.github.Mealf.BounceGateVPN.Router.ARP;
+import com.github.Mealf.BounceGateVPN.Router.VirtualRouter;
 import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
 import com.github.smallru8.driver.tuntap.TapDevice;
 import com.github.smallru8.util.abstracts.Port;

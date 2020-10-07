@@ -89,9 +89,22 @@ public class RoutingTable {
 
 	boolean remove(int hashCode) {
 		Iterator<RoutingField> it = table.iterator();
+		boolean flag = false;
 		while (it.hasNext()) {
 			RoutingField field = it.next();
 			if (field.sessionHashCode == hashCode) {
+				it.remove();
+				flag = true;
+			}
+		}
+		return flag;
+	}
+	
+	boolean remove(int des, int mask, int gateway) {
+		Iterator<RoutingField> it = table.iterator();
+		while (it.hasNext()) {
+			RoutingField field = it.next();
+			if (field.networkDes == des && field.netmask == mask && field.gateway == gateway) {
 				it.remove();
 				return true;
 			}
