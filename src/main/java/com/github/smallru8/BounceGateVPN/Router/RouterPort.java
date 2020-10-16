@@ -21,11 +21,6 @@ public class RouterPort extends Port{
 	public SwitchPort sPort;
 	public RouterPort rPort;
 	
-	public WebSocket ws;
-	public TapDevice td;
-	public SwitchPort sPort;
-	public RouterPort rPort;
-	
 	public RouterPort(WebSocket ws) {
 		this.ws = ws;
 		type = DeviceType.WS;
