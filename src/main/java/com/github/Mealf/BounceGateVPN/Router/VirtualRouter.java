@@ -46,17 +46,16 @@ public class VirtualRouter extends Thread {
 	final private int QUERY_START_AFTER = 5 * 1000;
 
 	/**
-	 * 建立Router
+	 * 建立Router 
+	 * default IP is 192.168.0.1/24
 	 */
-	public VirtualRouter(Config cfg) {
+	public VirtualRouter() {
 		powerFlag = true;
 		outputQ = new LinkedBlockingQueue<byte[]>();
 		routingTable = new RoutingTable();
 		port = new HashMap<>();
 		
-		routerIP = cfg.ip;
-		setMask(cfg.netmask);
-		setRoutingTable(cfg.routingTable);
+		setIP("192.168.0.1");
 		
 		multicast = new Multicast();
 		arp = new ARP();
@@ -75,8 +74,16 @@ public class VirtualRouter extends Thread {
 					sendDataToDevice(0, query_msg);
 			}
 		}, QUERY_START_AFTER, QUERY_INTERVAL);
+	}
+	
+	public VirtualRouter(Config cfg) {
+		this();
+		setIP(cfg.ip);
+		setMask(cfg.netmask);
+		setRoutingTable(cfg.routingTable);
 
 	}
+	
 
 	private void setMAC() {
 		MACAddr = new byte[6];
@@ -163,11 +170,11 @@ public class VirtualRouter extends Thread {
 
 	/**
 	 * 連接WS設備到此Router
-	 * 
+	 * 只用來加入連接switch的Bridge
 	 * @param ws
 	 */
-	public Port addSwitch(WebSocket bi) {
-		RouterPort sp = new RouterPort(bi);
+	public Port addDevice(WebSocket ws) {
+		RouterPort sp = new RouterPort(ws);
 		sp.vr = this;
 		port.put(switch_hashcode, sp);
 		return sp;
@@ -187,12 +194,12 @@ public class VirtualRouter extends Thread {
 	}
 
 	/**
-	 * 從Router中移除設備
+	 * 從Router中移除設備,只用於刪除switch port
 	 * 
 	 * @param devHashCode
 	 */
 	public void delDevice(int devHashCode) {
-		port.remove(devHashCode);
+		port.remove(switch_hashcode);
 	}
 
 	/**
