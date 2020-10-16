@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.java_websocket.WebSocket;
 
+import com.github.Mealf.BounceGateVPN.Router.ARP;
+import com.github.Mealf.BounceGateVPN.Router.VirtualRouter;
 import com.github.smallru8.BounceGateVPN.Switch.SwitchPort;
 import com.github.smallru8.driver.tuntap.TapDevice;
 import com.github.smallru8.util.abstracts.Port;
@@ -12,6 +14,12 @@ public class RouterPort extends Port{
 
 	public byte[] MACAddr;
 	public VirtualRouter vr;
+	private ARP arp = new ARP();
+	
+	public WebSocket ws;
+	public TapDevice td;
+	public SwitchPort sPort;
+	public RouterPort rPort;
 	
 	public WebSocket ws;
 	public TapDevice td;
@@ -22,21 +30,25 @@ public class RouterPort extends Port{
 		this.ws = ws;
 		type = DeviceType.WS;
 		setMAC();
+		arp.setMAC(MACAddr);
 	}
 	public RouterPort(TapDevice td) {
 		this.td = td;
 		type = DeviceType.TunTap;
 		setMAC();
+		arp.setMAC(MACAddr);
 	}
 	public RouterPort(SwitchPort sPort) {
 		this.sPort = sPort;
 		type = DeviceType.virtualSwitch;
 		setMAC();
+		arp.setMAC(MACAddr);
 	}
 	public RouterPort(RouterPort rPort) {
 		this.rPort = rPort;
 		type = DeviceType.virtualRouter;
 		setMAC();
+		arp.setMAC(MACAddr);
 	}
 	
 	/**
@@ -69,7 +81,7 @@ public class RouterPort extends Port{
 	}
 	
 	/**
-	 * 未實作
+	 * Device send data to router
 	 * @param data
 	 */
 	@Override
