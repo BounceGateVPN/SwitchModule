@@ -51,6 +51,11 @@
     </dependency>
     <dependency>
       <groupId>com.github.smallru8</groupId>
+      <artifactId>websocket</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.smallru8</groupId>
       <artifactId>Multicast</artifactId>
       <version>1.0</version>
     </dependency>
