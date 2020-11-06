@@ -38,6 +38,19 @@ public class ARP extends TimerTask {
 	public void setIP(byte[] IPAddr) {
 		this.IPAddr = IPAddr;
 	}
+	
+	public boolean isARPRequest(byte[] data) {
+		return (data[20] == 0x00 && data[21] == 0x01);
+	}
+	
+	public boolean isARPReply(byte[] data) {
+		return (data[20] == 0x00 && data[21] == 0x02);
+	}
+	
+	public int getDesIP(byte[] data) {
+		byte[] desIPAddr = { data[38], data[39], data[40], data[41] };
+		return ConvertIP.toInteger(desIPAddr);
+	}
 
 	/**
 	 * 自動發送 arp request return arp packet 接收arp reply return null 目標IP不符合local IP
@@ -48,7 +61,7 @@ public class ARP extends TimerTask {
 	 */
 	public byte[] arpAnalyzer(byte[] data) {
 
-		if (data[20] == 0x00 && data[21] == 0x01) {// arp request
+		if (isARPRequest(data)) {// arp request
 			byte[] desIPAddr = { data[38], data[39], data[40], data[41] };
 
 			if (Arrays.equals(IPAddr, desIPAddr)) {// 目標IP為本機
@@ -61,7 +74,8 @@ public class ARP extends TimerTask {
 
 			}
 
-		} else if (data[20] == 0x00 && data[21] == 0x02) {// arp reply
+		} else if (isARPReply(data)) {// arp reply
+			System.out.println("get arp reply");
 			byte[] desIPAddr = { data[38], data[39], data[40], data[41] };
 			byte[] desMACAddr = { data[32], data[33], data[34], data[35], data[36], data[37] };
 
@@ -97,9 +111,10 @@ public class ARP extends TimerTask {
 	public byte[] searchMACbyIP(byte[] IPAddr) {
 		Iterator<ARPTable> it = table.iterator();
 		while (it.hasNext()) {
-			if (Arrays.equals(it.next().IPAddr, IPAddr)) {
-				it.next().flag = true;
-				return it.next().MACAddr;
+			ARPTable filed = it.next();
+			if (Arrays.equals(filed.IPAddr, IPAddr)) {
+				filed.flag = true;
+				return filed.MACAddr;
 			}
 		}
 		return null;// table沒有紀錄
@@ -252,6 +267,18 @@ public class ARP extends TimerTask {
 		return packet;
 	}
 	
+	public byte[] generateARPreplyPacket(byte[] requestPacket) {
+		if(!isARPRequest(requestPacket))
+			return null;
+		
+		byte[] srcIPAddr = { requestPacket[28], requestPacket[29], requestPacket[30], requestPacket[31] };// 發送者IP address(本機)
+		byte[] srcMACAddr = { requestPacket[22], requestPacket[23], requestPacket[24], 
+				requestPacket[25], requestPacket[26], requestPacket[27] };// 發送者 MAC
+		byte[] desIPAddr = { requestPacket[38], requestPacket[39], requestPacket[40], requestPacket[41] };
+		
+		return generateARPreplyPacket(desIPAddr, MACAddr, srcIPAddr, srcMACAddr);// 回應reply packet
+	}
+	
 	public boolean isARP(byte[] data) {
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(data);
@@ -264,8 +291,10 @@ public class ARP extends TimerTask {
 	private void TTLCounter() {
 		Iterator<ARPTable> it = table.iterator();
 		while (it.hasNext()) {
-			if (it.next().flag)
-				it.next().flag = false;
+			
+			ARPTable field = it.next();
+			if (field.flag)
+				field.flag = false;
 			else
 				it.remove();
 		}
