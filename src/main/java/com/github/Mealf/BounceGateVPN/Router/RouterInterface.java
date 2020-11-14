@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 
 import org.skunion.BunceGateVPN.core2.websocket.WS_Client;
 
+import com.github.Mealf.BounceGateVPN.Multicast.Multicast;
+import com.github.Mealf.BounceGateVPN.Multicast.MulticastType;
 import com.github.Mealf.util.ConvertIP;
 import com.github.smallru8.BounceGateVPN.Router.RouterPort;
 import com.github.smallru8.Secure2.config.Config;
@@ -13,27 +15,41 @@ import com.github.smallru8.driver.tuntap.Analysis;
 public class RouterInterface extends WS_Client {
 
 	private ARP arp;
-	private byte[] IP;
-	private byte[] gateway;
-	private int mask;
+	private byte[] IP= {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x02};	//192.168.87.2
+	private byte[] gateway = {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x03}; //192.168.87.1
+	private int mask = -256; //255.255.255.0
 	public RouterPort rPort;
 
 	public RouterInterface(Config cfg) throws URISyntaxException {
 		super(cfg);
 		arp = new ARP();
+		arp.setIP(IP);
+		
+	}
+	
+	public void setMAC() {
+		arp.setMAC(rPort.MACAddr);
 	}
 
 	@Override
-	public void send(ByteBuffer bytes) {
-		byte[] data = bytes.array();
-		try {
-			data = arpHandler(data, "send");
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+	public void send(byte[] data) {
+		Multicast multicast = new Multicast();
+		multicast.setPacket(data);
+		if(multicast.getType() == MulticastType.MULTICAST) {
+			// fill srcMAC
+			for (int i = 0; i < 6; i++)
+				data[i + 6] = rPort.MACAddr[i];
+		} else {
+			try {
+				data = arpHandler(data, "send");
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		
-		if (data != null)
+		if (data != null) {
 			super.send(data);
+		}
 	}
 
 	@Override
@@ -48,7 +64,7 @@ public class RouterInterface extends WS_Client {
 			}
 
 			if (data != null)
-				sport.sendToVirtualDevice(data);
+				rPort.sendToVirtualDevice(data);
 		}
 	}
 
