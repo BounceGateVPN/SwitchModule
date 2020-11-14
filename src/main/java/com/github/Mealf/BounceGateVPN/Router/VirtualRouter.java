@@ -56,10 +56,10 @@ public class VirtualRouter extends Thread {
 		routingTable = new RoutingTable();
 		port = new HashMap<>();
 		
-		setIP("192.168.0.1");
-		
 		multicast = new Multicast();
 		arp = new ARP();
+		
+		setIP("192.168.0.1");
 		setMAC();
 		setMask(24);
 
@@ -332,10 +332,9 @@ public class VirtualRouter extends Thread {
 		if (analysis.packetType() == 0x06) {
 			arp.arpAnalyzer(data);
 			byte[] arpReturn = arp.arpAnalyzer(data);
+			
 			if (arpReturn != null) {
-				int devHashCode = routingTable.searchSrcPortHashCode(data);
-				if (devHashCode != 0)
-					port.get(devHashCode).sendToDevice(arpReturn);
+					port.get(switch_hashcode).sendToDevice(arpReturn);
 			}
 			return null;
 		}
@@ -349,16 +348,19 @@ public class VirtualRouter extends Thread {
 			nextHostIP = ConvertIP.toByteArray(gateway);
 		}
 		int count = 0;
-		do {
+		desMAC = arp.searchMACbyIP(nextHostIP);
+		while(desMAC == null) {
+			/*send ARP request*/
 			if (count >= 10)
 				return null;
-			desMAC = arp.searchMACbyIP(nextHostIP);
+			
 			byte[] srcIPAddr = ConvertIP.toByteArray(routerIP);
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			sendToSwitch(arp.generateARPrequestPacket(srcIPAddr, MACAddr, desIPAddr));
 			count++;
 			Thread.sleep(500);
-		} while (desMAC == null);
+			desMAC = arp.searchMACbyIP(nextHostIP);
+		}
 
 		// fill desMAC
 		for (int i = 0; i < 6; i++)

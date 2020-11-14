@@ -58,10 +58,9 @@ public class RouterInterface extends WS_Client {
 		System.out.println("in arpHandler");
 		// arp reply & request
 		if (analysis.packetType() == 0x06) {
-			arp.arpAnalyzer(data);
 			byte[] arpReturn = arp.arpAnalyzer(data);
 			if (arpReturn != null) {
-				send(arpReturn);
+				super.send(arpReturn);
 			}
 			return null;
 		}
@@ -79,16 +78,18 @@ public class RouterInterface extends WS_Client {
 		}
 
 		int count = 0;
-		do {
+		desMAC = arp.searchMACbyIP(nextHostIP);
+		while(desMAC == null) {
 			if (count >= 10)
 				return null;
-			desMAC = arp.searchMACbyIP(nextHostIP);
+			
 			byte[] srcIPAddr = this.IP;
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			super.send(arp.generateARPrequestPacket(srcIPAddr, rPort.MACAddr, desIPAddr));
 			count++;
 			Thread.sleep(500);
-		} while (desMAC == null);
+			desMAC = arp.searchMACbyIP(nextHostIP);
+		} 
 
 		// fill desMAC
 		for (int i = 0; i < 6; i++)
