@@ -23,6 +23,7 @@ import com.github.smallru8.BounceGateVPN.Router.RouterPort;
 import com.github.smallru8.Secure2.config.Config;
 import com.github.smallru8.driver.tuntap.Analysis;
 import com.github.smallru8.util.abstracts.Port;
+import com.github.smallru8.util.log.Event;
 import com.github.smallru8.util.log.EventSender;
 
 public class VirtualRouter extends Thread {
@@ -108,9 +109,18 @@ public class VirtualRouter extends Thread {
 		}
 	}
 	private void setRoutingTable(String routingTable) {
+		/*    |   desIP    |  netmask    |   gateway  | interface/switch
+		 * ex. 192.168.87.0,255.255.255.0,0.0.0.0     ,interface
+		 *     192.168.89.0,255.255.255.0,192.168.88.2,switch
+		 */ 
+		this.routingTable = new RoutingTable();
+		routingTable = routingTable.replaceAll("\\s+","");
+		System.out.println(routingTable);
 		String[] routingFields = routingTable.split(";");
 		for(String routingField:routingFields) {
 			String[] args = routingField.split(",");
+			if(args.length!=4)
+				continue;
 			int mask = 0,tmpMask = ConvertIP.toInteger(args[1]);
 			for(int i=32;i>=0;i--) {
 				if((tmpMask & 1) == 1) {
@@ -126,7 +136,7 @@ public class VirtualRouter extends Thread {
 				hashcode = switch_hashcode;
 			else
 				hashcode = interface_hashcode;
-			//hashcode may not same
+			
 			this.routingTable.addRoutingTable(des, mask, gateway, hashcode);
 		}
 	}
