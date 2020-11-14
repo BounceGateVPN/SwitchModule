@@ -86,6 +86,16 @@ public class RoutingTable {
 		}
 		return 0;
 	}
+	
+	public void changeHashCode(int oldHashCode, int newHashCode) {
+		for (int i = 0; i < table.size(); i++) {
+			RoutingField field = table.get(i);
+			if(field.sessionHashCode == oldHashCode)
+				field.sessionHashCode = newHashCode;
+		}
+		
+		return;
+	}
 
 	boolean remove(int hashCode) {
 		Iterator<RoutingField> it = table.iterator();

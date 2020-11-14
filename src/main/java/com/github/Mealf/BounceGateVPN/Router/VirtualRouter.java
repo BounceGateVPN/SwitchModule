@@ -27,14 +27,15 @@ import com.github.smallru8.util.log.EventSender;
 
 public class VirtualRouter extends Thread {
 	public static byte[] MACAddr_Upper = new byte[] { 0x5E, 0x06, 0x10 };
-	final private static int switch_hashcode = 0;
-	final private static int interface_hashcode = 1;
+	private int switch_hashcode = 2;
+	private int interface_hashcode = 1;
 
 	private boolean powerFlag;
 	private RoutingTable routingTable;
 	public Map<Integer, RouterPort> port;// 紀錄連接上此Router的設備，用hashCode()識別
 	private BlockingQueue<byte[]> outputQ;// 要輸出的data queue
 	private ARP arp;
+	private RouterInterface routerInterface;
 
 	private Multicast multicast;
 	private Timer timer;
@@ -176,21 +177,41 @@ public class VirtualRouter extends Thread {
 	public Port addDevice(WebSocket ws) {
 		RouterPort sp = new RouterPort(ws);
 		sp.vr = this;
+		
+		/*change current hashcode*/
+		routingTable.changeHashCode(switch_hashcode, ws.hashCode());
+		switch_hashcode = ws.hashCode();
+		
 		port.put(switch_hashcode, sp);
+		
 		return sp;
 	}
 
 	public void addRouterInterface(Config user) throws URISyntaxException {
-		RouterInterface routerInterface = new RouterInterface(user);
+		routerInterface = new RouterInterface(user);
 		RouterPort rPort = new RouterPort(routerInterface);
 		rPort.vr = this;
-		port.put(interface_hashcode, rPort);
+		
+		/*change current hashcode*/
+		routingTable.changeHashCode(interface_hashcode, routerInterface.hashCode());
+		interface_hashcode = routerInterface.hashCode();
+		
 		routerInterface.rPort = rPort;
+		routerInterface.setMAC();
 		routerInterface.connect();
+		
+		port.put(interface_hashcode, rPort);
 	}
 	
 	public void addRoutingTable(int des, int mask, int gateway, int hashcode) {
 		routingTable.addRoutingTable(des, mask, gateway, hashcode);
+	}
+	
+	public void addRoutingTable(int des, int mask, int gateway, String device) {
+		if(device == "switch")
+			routingTable.addRoutingTable(des, mask, gateway, switch_hashcode);
+		else
+			routingTable.addRoutingTable(des, mask, gateway, interface_hashcode);
 	}
 
 	/**
