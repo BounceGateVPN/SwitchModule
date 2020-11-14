@@ -24,6 +24,8 @@ import com.github.smallru8.util.abstracts.Port;
  */
 public class VirtualSwitch extends Thread{
 	
+	public String name = "";//GUI識別用
+	
 	protected boolean powerFlag;
 	protected MACAddressTable switchTable;
 	public Map<Integer,SwitchPort> port;//紀錄連接上此Switch的設備，用hashCode()識別

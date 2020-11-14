@@ -28,6 +28,9 @@ import com.github.smallru8.util.log.EventSender;
 
 public class VirtualRouter extends Thread {
 	public static byte[] MACAddr_Upper = new byte[] { 0x5E, 0x06, 0x10 };
+	
+	public String name = "";//GUI識別用
+	
 	private int switch_hashcode = 2;
 	private int interface_hashcode = 1;
 
