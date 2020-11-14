@@ -242,70 +242,49 @@ public class VirtualRouter extends Thread {
 	private void sendDataToDevice(int devHashCode, byte[] data) {
 		if (data == null)
 			return;
-
+		EventSender.sendLog("send data.");
 		int tmpHashCode = routingTable.searchSrcPortHashCode(data);
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(data);
+		
+		
 		if (analysis.packetType() == 0x06) {
+			/*handle ARP reply*/
+			
 			EventSender.sendLog("data is arp");
-			// get arp reply
 			try {
 				arpHandler(data);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} else if (devHashCode == 0 && !isInLocalNetwork(analysis.getDesIPaddress())) {
-			multicast.setPacket(data);
-
-			// fill srcMAC
-			for (int i = 0; i < 6; i++)
-				data[i + 6] = MACAddr[i];
-
-			if (multicast.getType() == MulticastType.MULTICAST && !multicast.isSpecialAddress()) {
-				EventSender.sendLog("data is multicast");
-				ArrayList<byte[]> IPList = multicast.getIPinGroup();
-				if (IPList == null) {
-					EventSender.sendLog("No member in group.\n");
-					return;
-				}
-				
-				Set<Integer> ports = new HashSet<>();
-				for (byte[] ip : IPList) {
-					EventSender.sendLog("send to:" + ConvertIP.toString(ip));
-					int IPNum = ConvertIP.toInteger(ip), hashcode;
-					hashcode = routingTable.searchDesPortHashCode(IPNum);
-					ports.add(hashcode);
-				}
-				for(int hashcode: ports) {
-					RouterPort dst_port = port.get(hashcode);
-					if (tmpHashCode != hashcode && dst_port != null)
-						dst_port.sendToDevice(data);
-				}
-
-			} else {
-				//broadcast(data);
+			
+		} 	else if (devHashCode == 0 && !isInLocalNetwork(analysis.getDesIPaddress())) {
+			/*handle multicast*/
+			multicastHandler(tmpHashCode, data);
+			
+		} else if(devHashCode == interface_hashcode) {
+			/*send to routerInterface*/
+			
+			RouterPort dst_port = port.get(devHashCode);
+			if (dst_port != null)	
+				dst_port.sendToDevice(data);
+			
+		} else if(devHashCode == switch_hashcode || (devHashCode==0 && isInLocalNetwork(analysis.getDesIPaddress()))) {
+			/*send to switch*/
+			
+			if(port.get(switch_hashcode)==null)	//not yet added switch
+				return;
+			
+			try {
+				data = arpHandler(data);
+			} catch (InterruptedException e) {
+				data = null;
+				e.printStackTrace();
 			}
-		} else {
-			if (devHashCode == interface_hashcode) {
-				RouterPort dst_port = port.get(devHashCode);
-				if (dst_port != null)	
-					dst_port.sendToDevice(data);
-				
-			} else {
-				if(port.get(switch_hashcode)==null)	//not yet added switch
-					return;
-				
-				try {
-					data = arpHandler(data);
-				} catch (InterruptedException e) {
-					data = null;
-					e.printStackTrace();
-				}
-				if (data == null)
-					return;
+			if (data == null)
+				return;
 
-				port.get(devHashCode).sendToDevice(data);
-			}
+			port.get(switch_hashcode).sendToDevice(data);
 		}
 	}
 
@@ -373,6 +352,41 @@ public class VirtualRouter extends Thread {
 		return data;
 	}
 	
+	private void multicastHandler(int srcPortHashCode, byte[] data) {
+		multicast.setPacket(data);
+
+		// fill srcMAC
+		for (int i = 0; i < 6; i++)
+			data[i + 6] = MACAddr[i];
+
+		if (multicast.getType() == MulticastType.MULTICAST && !multicast.isSpecialAddress()) {	
+			/*handle multicast*/
+			
+			EventSender.sendLog("data is multicast");
+			ArrayList<byte[]> IPList = multicast.getIPinGroup();
+			if (IPList == null) {
+				EventSender.sendLog("No member in group.\n");
+				return;
+			}
+			
+			Set<Integer> ports = new HashSet<>();
+			for (byte[] ip : IPList) {
+				EventSender.sendLog("send to:" + ConvertIP.toString(ip));
+				int IPNum = ConvertIP.toInteger(ip), hashcode;
+				hashcode = routingTable.searchDesPortHashCode(IPNum);
+				ports.add(hashcode);
+			}
+			for(int hashcode: ports) {
+				RouterPort dst_port = port.get(hashcode);
+				if (srcPortHashCode != hashcode && dst_port != null)
+					dst_port.sendToDevice(data);
+			}
+
+		} else {
+			broadcast(data);
+		}
+	}
+	
 	private boolean isInLocalNetwork(int searchIP) {
 		return ((searchIP&netmask) == (ConvertIP.toInteger(routerIP)&netmask));
 	}
@@ -380,19 +394,20 @@ public class VirtualRouter extends Thread {
 	@Override
 	public void run() {
 		byte[] buffer;
+		System.out.println("router run!!");
 		while (powerFlag) {
 			try {
 				buffer = outputQ.take();
 
-				final byte[] data = buffer;
+				/*final byte[] data = buffer;
 				fixedThreadPool.execute(new Runnable() {
 					@Override
 					public void run() {
 						sendDataToDevice(routingTable.searchDesPortHashCode(data), data);
 					}
-				});
+				});*/
 
-				// sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
+				 sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
