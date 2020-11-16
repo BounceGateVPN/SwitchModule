@@ -22,9 +22,24 @@ public class RouterInterface extends WS_Client {
 
 	public RouterInterface(Config cfg) throws URISyntaxException {
 		super(cfg);
-		arp = new ARP();
-		arp.setIP(IP);
 		
+		arp = new ARP();
+		setIP(cfg.InterfaceIP);
+		setGateway(cfg.InterfaceGateway);
+		setNetmask(cfg.InterfaceNetmask);
+	}
+	
+	public void setIP(String IP) {
+		this.IP = ConvertIP.toByteArray(IP);
+		arp.setIP(this.IP);
+	}
+	
+	public void setGateway(String gateway) {
+		this.gateway = ConvertIP.toByteArray(gateway);
+	}
+	
+	public void setNetmask(String netmask) {
+		this.mask = ConvertIP.toInteger(netmask);
 	}
 	
 	public void setMAC() {
