@@ -403,6 +403,17 @@ public class VirtualRouter extends Thread {
 	private boolean isInLocalNetwork(int searchIP) {
 		return ((searchIP&netmask) == (ConvertIP.toInteger(routerIP)&netmask));
 	}
+	
+	private int getIPversion(byte[] data) {
+		/*get packet is IPv6(6), IPv4(4) or other(0)*/
+		int version = 0;
+		if(data.length >=15 && data[12]==0x08 && data[13]==0x00) {
+			version = Byte.toUnsignedInt(data[14]);
+			version = version>>>4;
+		}
+		
+		return version;
+	}
 
 	@Override
 	public void run() {
@@ -411,7 +422,9 @@ public class VirtualRouter extends Thread {
 		while (powerFlag) {
 			try {
 				buffer = outputQ.take();
-
+				if(getIPversion(buffer)==6)
+					continue;
+				
 				final byte[] data = buffer;
 				fixedThreadPool.execute(new Runnable() {
 					@Override
