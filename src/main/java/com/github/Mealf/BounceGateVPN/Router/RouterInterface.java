@@ -35,7 +35,7 @@ public class RouterInterface extends WS_Client {
 	public void send(byte[] data) {
 		Multicast multicast = new Multicast();
 		multicast.setPacket(data);
-		if(multicast.getType() == MulticastType.MULTICAST) {
+		if(multicast.getType() != MulticastType.NULL) {
 			// fill srcMAC
 			for (int i = 0; i < 6; i++)
 				data[i + 6] = rPort.MACAddr[i];
@@ -103,7 +103,7 @@ public class RouterInterface extends WS_Client {
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			super.send(arp.generateARPrequestPacket(srcIPAddr, rPort.MACAddr, desIPAddr));
 			count++;
-			Thread.sleep(500);
+			Thread.sleep(10);
 			desMAC = arp.searchMACbyIP(nextHostIP);
 		} 
 

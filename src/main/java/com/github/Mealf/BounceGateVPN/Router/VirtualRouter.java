@@ -350,7 +350,7 @@ public class VirtualRouter extends Thread {
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			sendToSwitch(arp.generateARPrequestPacket(srcIPAddr, MACAddr, desIPAddr));
 			count++;
-			Thread.sleep(500);
+			Thread.sleep(10);
 			desMAC = arp.searchMACbyIP(nextHostIP);
 		}
 
@@ -412,15 +412,15 @@ public class VirtualRouter extends Thread {
 			try {
 				buffer = outputQ.take();
 
-				/*final byte[] data = buffer;
+				final byte[] data = buffer;
 				fixedThreadPool.execute(new Runnable() {
 					@Override
 					public void run() {
 						sendDataToDevice(routingTable.searchDesPortHashCode(data), data);
 					}
-				});*/
+				});
 
-				 sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
+				 //sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
