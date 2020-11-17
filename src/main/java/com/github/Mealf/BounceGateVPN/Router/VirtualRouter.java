@@ -407,9 +407,11 @@ public class VirtualRouter extends Thread {
 	private int getIPversion(byte[] data) {
 		/*get packet is IPv6(6), IPv4(4) or other(0)*/
 		int version = 0;
-		if(data.length >=15 && data[12]==0x08 && data[13]==0x00) {
-			version = Byte.toUnsignedInt(data[14]);
-			version = version>>>4;
+		if(data.length >=15) {
+			if(data[12]==0x08 && data[13]==0x00)
+				version = 4;
+			else if(data[12]==(byte)0x86 && data[13]==(byte)0xdd)
+				version = 6;
 		}
 		
 		return version;
@@ -425,15 +427,15 @@ public class VirtualRouter extends Thread {
 				if(getIPversion(buffer)==6)
 					continue;
 				
-				final byte[] data = buffer;
+				/*final byte[] data = buffer;
 				fixedThreadPool.execute(new Runnable() {
 					@Override
 					public void run() {
 						sendDataToDevice(routingTable.searchDesPortHashCode(data), data);
 					}
-				});
+				});*/
 
-				 //sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
+				 sendDataToDevice(routingTable.searchDesPortHashCode(buffer), buffer);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
