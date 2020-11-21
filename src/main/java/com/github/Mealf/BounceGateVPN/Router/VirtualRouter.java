@@ -112,9 +112,9 @@ public class VirtualRouter extends Thread {
 		}
 	}
 	private void setRoutingTable(String routingTable) {
-		/*    |   desIP    |  netmask    |   gateway  | interface/switch
-		 * ex. 192.168.87.0,255.255.255.0,0.0.0.0     ,interface
-		 *     192.168.89.0,255.255.255.0,192.168.88.2,switch
+		/*    |   desIP    |  netmask     |   gateway   | interface/switch
+		 * ex. 192.168.87.0, 255.255.255.0, 0.0.0.0     , interface
+		 *     192.168.89.0, 255.255.255.0, 192.168.88.2, switch
 		 */ 
 		this.routingTable = new RoutingTable();
 		routingTable = routingTable.replaceAll("\\s+","");
@@ -135,7 +135,7 @@ public class VirtualRouter extends Thread {
 			int des = ConvertIP.toInteger(args[0]);
 			int gateway = ConvertIP.toInteger(args[2]);
 			int hashcode;
-			if(args[3] == "switch")
+			if(args[3].equals("switch"))
 				hashcode = switch_hashcode;
 			else
 				hashcode = interface_hashcode;
@@ -221,7 +221,7 @@ public class VirtualRouter extends Thread {
 	}
 	
 	public void addRoutingTable(int des, int mask, int gateway, String device) {
-		if(device == "switch")
+		if(device.equals("switch"))
 			routingTable.addRoutingTable(des, mask, gateway, switch_hashcode);
 		else
 			routingTable.addRoutingTable(des, mask, gateway, interface_hashcode);
