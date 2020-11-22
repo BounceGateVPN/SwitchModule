@@ -228,6 +228,28 @@ public class VirtualRouter extends Thread {
 	}
 
 	/**
+	 * GUI呼叫用
+	 * @param des
+	 * @param mask
+	 * @param gateway
+	 * @param device interface/switch
+	 */
+	public void addRoutingTable(String des, String mask, String gateway, String device) {
+		addRoutingTable(ConvertIP.toInteger(des), ConvertIP.toInteger(mask), ConvertIP.toInteger(gateway), device);
+	}
+
+	/**
+	 * GUI呼叫用
+	 * @param des
+	 * @param mask
+	 * @param gateway
+	 * @return
+	 */
+	public boolean delRoutingTable(String des, String mask, String gateway) {
+		return routingTable.remove(ConvertIP.toInteger(des), ConvertIP.toInteger(mask), ConvertIP.toInteger(gateway));
+	}
+	
+	/**
 	 * 從Router中移除設備,只用於刪除switch port
 	 * 
 	 * @param devHashCode
