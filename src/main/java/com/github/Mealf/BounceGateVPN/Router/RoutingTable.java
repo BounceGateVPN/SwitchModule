@@ -9,7 +9,7 @@ import com.github.smallru8.driver.tuntap.Analysis;
 public class RoutingTable {
 	class RoutingField {
 		public int networkDes;
-		public int netmask;	//mask range 0~32
+		public int netmask;	//netmask is IP format (ex. 255.255.255.0)
 		public int gateway;	//only use in search gateway
 		public int sessionHashCode;
 		public int metric;
@@ -29,10 +29,12 @@ public class RoutingTable {
 		table = new ArrayList<>();
 	}
 
-	public void addRoutingTable(int des, int mask, int gateway, int hashcode) {
+	public void addRoutingTable(int des, int mask, int gateway, int hashcode) {	
+		/*The bigger the mask, the more front*/
+		
 		RoutingField field = new RoutingField(des, mask, gateway, hashcode, 1);
 		for (int i = 0; i < table.size(); i++) {
-			if (table.get(i).netmask <= mask) {
+			if (Integer.compareUnsigned(table.get(i).netmask, mask) <= 0) {
 				table.add(i, field);
 				return;
 			}
@@ -49,11 +51,10 @@ public class RoutingTable {
 	}
 
 	public int searchDesPortHashCode(int desIP) {
-		int shl = 0;
 		for (int i = 0; i < table.size(); i++) {
 			RoutingField field = table.get(i);
-			shl = 32 - field.netmask;
-			if (field.networkDes >> shl == desIP >> shl)
+			int netmask =  field.netmask;
+			if ((field.networkDes&netmask) == (desIP&netmask))
 				return field.sessionHashCode;
 		}
 		return 0;
@@ -63,11 +64,10 @@ public class RoutingTable {
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(packet);
 		int desIP = analysis.getSrcIPaddress();
-		int shl = 0;
 		for (int i = 0; i < table.size(); i++) {
 			RoutingField field = table.get(i);
-			shl = 32 - field.netmask;
-			if (field.networkDes >> shl == desIP >> shl)
+			int netmask = field.netmask;
+			if ((field.networkDes&netmask) == (desIP&netmask))
 				return field.sessionHashCode;
 		}
 		return 0;
@@ -77,11 +77,10 @@ public class RoutingTable {
 		Analysis analysis = new Analysis();
 		analysis.setFramePacket(packet);
 		int desIP = analysis.getSrcIPaddress();
-		int shl = 0;
 		for (int i = 0; i < table.size(); i++) {
 			RoutingField field = table.get(i);
-			shl = 32 - field.netmask;
-			if (field.networkDes >> shl == desIP >> shl)
+			int netmask = field.netmask;
+			if ((field.networkDes&netmask) == (desIP&netmask))
 				return field.gateway;
 		}
 		return 0;

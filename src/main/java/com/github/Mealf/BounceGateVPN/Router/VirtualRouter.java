@@ -45,7 +45,7 @@ public class VirtualRouter extends Thread {
 	private Timer timer;
 	ExecutorService fixedThreadPool = Executors.newCachedThreadPool();
 	private String routerIP = "";
-	private int netmask;
+	private int netmask;	//netmask is IP format (ex. 255.255.255.0)
 	private byte[] MACAddr;
 	final private int QUERY_INTERVAL = 6 * 1000;
 	final private int QUERY_START_AFTER = 5 * 1000;
@@ -65,7 +65,7 @@ public class VirtualRouter extends Thread {
 		
 		setIP("192.168.0.1");
 		setMAC();
-		setMask(24);
+		setMask("255.255.255.0");
 
 		// Send IGMP query regularly
 		EventSender.sendLog("Create Timer");
@@ -103,13 +103,8 @@ public class VirtualRouter extends Thread {
 		arp.setMAC(MACAddr);
 	}
 
-	public void setMask(int slashNumber) {
-		netmask = 0;
-		for (int i = 0; i < 32; i++) {
-			netmask = netmask << 1;
-			if (i < slashNumber)
-				netmask = netmask | 1;
-		}
+	public void setMask(int netmask) {
+		this.netmask = netmask;
 	}
 	private void setRoutingTable(String routingTable) {
 		/*    |   desIP    |  netmask     |   gateway   | interface/switch
@@ -124,14 +119,8 @@ public class VirtualRouter extends Thread {
 			String[] args = routingField.split(",");
 			if(args.length!=4)
 				continue;
-			int mask = 0,tmpMask = ConvertIP.toInteger(args[1]);
-			for(int i=32;i>=0;i--) {
-				if((tmpMask & 1) == 1) {
-					mask =  i;
-					break;
-				}
-				tmpMask = tmpMask >> 1;
-			}
+			int mask = ConvertIP.toInteger(args[1]);
+			
 			int des = ConvertIP.toInteger(args[0]);
 			int gateway = ConvertIP.toInteger(args[2]);
 			int hashcode;
@@ -145,7 +134,7 @@ public class VirtualRouter extends Thread {
 	}
 	
 	public void setMask(String ip_format) {
-		netmask = ConvertIP.toInteger(ip_format);
+		setMask(ConvertIP.toInteger(ip_format));
 	}
 	
 	public void setIP(String IP) {
@@ -159,14 +148,7 @@ public class VirtualRouter extends Thread {
 	}
 	
 	public int getMask() {
-		int tmpMask = this.netmask;
-		for(int i=32;i>=0;i--) {
-			if((tmpMask & 1) == 1) {
-				return i;
-			}
-			tmpMask = tmpMask >> 1;
-		}
-		return 0;
+		return this.netmask;
 	}
 	
 	public byte[] getMAC() {

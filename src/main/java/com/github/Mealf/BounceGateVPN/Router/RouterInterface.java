@@ -17,7 +17,7 @@ public class RouterInterface extends WS_Client {
 	private ARP arp;
 	private byte[] IP= {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x02};	//192.168.87.2
 	private byte[] gateway = {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x03}; //192.168.87.1
-	private int mask = -256; //255.255.255.0
+	private int mask = -256; ////netmask is IP format (ex. 255.255.255.0)
 	public RouterPort rPort;
 
 	public RouterInterface(Config cfg) throws URISyntaxException {
