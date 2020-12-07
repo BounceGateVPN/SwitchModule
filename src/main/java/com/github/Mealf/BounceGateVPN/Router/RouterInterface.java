@@ -2,6 +2,9 @@ package com.github.Mealf.BounceGateVPN.Router;
 
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.skunion.BunceGateVPN.core2.websocket.WS_Client;
 
@@ -18,6 +21,7 @@ public class RouterInterface extends WS_Client {
 	private byte[] IP= {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x02};	//192.168.87.2
 	private byte[] gateway = {(byte) 0xC0,(byte) 0xA8,(byte) 0x57,(byte) 0x03}; //192.168.87.1
 	private int mask = -256; ////netmask is IP format (ex. 255.255.255.0)
+	private Map<Integer, ArrayList<byte[]>> unknow_packet;
 	public RouterPort rPort;
 
 	public RouterInterface(Config cfg) throws URISyntaxException {
@@ -27,6 +31,7 @@ public class RouterInterface extends WS_Client {
 		setIP(cfg.InterfaceIP);
 		setGateway(cfg.InterfaceGateway);
 		setNetmask(cfg.InterfaceNetmask);
+		unknow_packet = new HashMap<Integer, ArrayList<byte[]>>();
 	}
 	
 	public void setIP(String IP) {
@@ -92,6 +97,14 @@ public class RouterInterface extends WS_Client {
 			byte[] arpReturn = arp.arpAnalyzer(data);
 			if (arpReturn != null) {
 				super.send(arpReturn);
+			} else {
+				int arpSrcIP = arp.getSrcIP(data);
+				if(unknow_packet.get(arpSrcIP) != null) {
+					for(byte[] packet : unknow_packet.get(arpSrcIP)) {
+						send(packet);
+					}
+					unknow_packet.remove(arpSrcIP);
+				}
 			}
 			return null;
 		}
@@ -111,14 +124,18 @@ public class RouterInterface extends WS_Client {
 		int count = 0;
 		desMAC = arp.searchMACbyIP(nextHostIP);
 		while(desMAC == null) {
-			if (count >= 10)
+			if (count >= 1) {
+				if(unknow_packet.get(ConvertIP.toInteger(nextHostIP))==null)
+					unknow_packet.put(ConvertIP.toInteger(nextHostIP), new ArrayList<byte[]>());
+				unknow_packet.get(ConvertIP.toInteger(nextHostIP)).add(data);
 				return null;
+			}
 			
 			byte[] srcIPAddr = this.IP;
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			super.send(arp.generateARPrequestPacket(srcIPAddr, rPort.MACAddr, desIPAddr));
 			count++;
-			Thread.sleep(10);
+			Thread.sleep(1);
 			desMAC = arp.searchMACbyIP(nextHostIP);
 		} 
 

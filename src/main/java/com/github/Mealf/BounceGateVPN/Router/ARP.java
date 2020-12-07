@@ -51,6 +51,11 @@ public class ARP extends TimerTask {
 		byte[] desIPAddr = { data[38], data[39], data[40], data[41] };
 		return ConvertIP.toInteger(desIPAddr);
 	}
+	
+	public int getSrcIP(byte[] data) {
+		byte[] srcIPAddr = { data[28], data[29], data[30], data[31] };
+		return ConvertIP.toInteger(srcIPAddr);
+	}
 
 	/**
 	 * 自動發送 arp request return arp packet 接收arp reply return null 目標IP不符合local IP

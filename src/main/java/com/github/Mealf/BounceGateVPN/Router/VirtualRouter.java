@@ -347,14 +347,16 @@ public class VirtualRouter extends Thread {
 		desMAC = arp.searchMACbyIP(nextHostIP);
 		while(desMAC == null) {
 			/*send ARP request*/
-			if (count >= 10)
+			if (count >= 1) {
+				this.sendDataToRouter(0, data);
 				return null;
+			}
 			
 			byte[] srcIPAddr = ConvertIP.toByteArray(routerIP);
 			byte[] desIPAddr = ConvertIP.toByteArray(analysis.getDesIPaddress());
 			sendToSwitch(arp.generateARPrequestPacket(srcIPAddr, MACAddr, desIPAddr));
 			count++;
-			Thread.sleep(10);
+			Thread.sleep(1);
 			desMAC = arp.searchMACbyIP(nextHostIP);
 		}
 
